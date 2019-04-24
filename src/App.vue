@@ -1,11 +1,21 @@
 <template>
   <v-app>
+
+    <v-btn
+      fixed
+      fab
+      style="top:12px;left:12px;z-index:5;"
+      @click="navDrawer = !navDrawer"
+    >
+      <v-icon>menu</v-icon>
+    </v-btn>
+
     <v-navigation-drawer
     app
     light
     height="100%"
     width="300"
-    permanent
+    v-model="navDrawer"
     >
 
     <v-list>
@@ -39,7 +49,7 @@
   v-for="item in items"
   :key="item.title"
   v-if="item.bConnected == false || $session.has('user')"
-  @click="router.push(item.route)"
+  @click="$router.push(item.route)"
   >
   <v-list-tile-action>
     <v-icon>{{ item.icon }}</v-icon>
@@ -113,8 +123,9 @@
     name: 'App',
     data () {
       return {
+        navDrawer: false,
         items: [
-        {title: "Trottinettes", icon: "map", route: "map", bConnected:false},
+        {title: "Trottinettes", icon: "map", route: "/", bConnected:false},
         {title: "Historique", icon: "history", route: "historique", bConnected:true},
         {title: "Moyens de payement", icon: "credit_card", route: "payement", bConnected:true},
         {title: "Devenir rechargeur", icon: "power", route: "rechargeur", bConnected:false},
@@ -136,7 +147,7 @@
             password: this.password
         }).then(response => {
           if (response.status == 200) {
-            this.$session.set('user', this.login);
+            this.$session.set('user', response.body);
             this.dialogConnect = false;
             console.log(this.$session.get('user'));
           }
