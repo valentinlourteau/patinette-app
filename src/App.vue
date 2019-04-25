@@ -99,7 +99,7 @@
             <v-text-field label="Login*" v-model="login" required></v-text-field>
           </v-flex>
           <v-flex xs12 sm6 md4>
-            <v-text-field label="Mot de passe*" v-model="password" required></v-text-field>
+            <v-text-field label="Mot de passe*" v-model="password" type="password" required></v-text-field>
           </v-flex>
         </v-layout>
       </v-container>
@@ -147,9 +147,8 @@
             password: this.password
         }).then(response => {
           if (response.status == 200) {
-            this.$session.set('user', response.body);
+            this.$session.set('user', response.data);
             this.dialogConnect = false;
-            console.log(this.$session.get('user'));
           }
         });
       }

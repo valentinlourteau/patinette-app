@@ -1,5 +1,8 @@
 <template>
 	<div>
+
+		<img style="position:fixed;z-index:4;top:12px;height:56px;left:50%;transform: translateX(-50%);" src="/static/img/flashtrottjour-logo.jpg">
+
 		<div style="height:100%;position:fixed;">
 			<GmapMap
 			:center="{lat:10, lng:10}"
@@ -23,6 +26,7 @@
 			:position="m.position"
 			:clickable="true"
 			:draggable="true"
+			icon="/static/img/icone-flashtrott-map-mini.png"
 			@click="center=m.position"
 			/>
 		</GmapMap>
@@ -58,10 +62,10 @@ style="position:fixed;bottom:36px;left:50%;transform: translateX(-50%);width: 80
 
 <v-card-text>
 	<div class="body-2">
-		Temps écoulé depuis le début : 2:21
+		Temps écoulé depuis le début : {{estimatedTime}}
 	</div>
 	<div class="body-2">
-		Coût estimé : 3€25
+		Coût estimé : {{estimatedPrice}}
 	</div>
 </v-card-text>
 
@@ -118,22 +122,29 @@ style="position:fixed;bottom:36px;left:50%;transform: translateX(-50%);width: 80
 		name: 'Carte',
 		mounted() {
 			this.$refs.trotinettesMapRef.$mapPromise.then((map) => {
-				map.panTo({lat:48.854271, lng:2.387739})
+				map.panTo({lat:43.296219, lng:5.371826})
 			})
+			this.axios.get("trottinette/allTrottinettes")
+			.then(response => {
+				if (response.status == 200) {
+					console.log(response.data);
+					response.data.forEach(element => {
+						this.markers.push({
+							position: {lat:element.lat , lng:element.lng}
+						});
+					});
+				}
+			});
 		},
 		data () {
 			return {
 				keepDecoding: false,
 				dialogValidateTrottinette: false,
-				markers: [
-				{position : {lat:48.854737, lng:2.387471}},
-				{position : {lat:48.855092, lng:2.387163}},
-				{position : {lat:48.855023, lng:2.386752}},
-				{position : {lat:48.854186, lng:2.387772}},
-				{position : {lat:48.854026, lng:2.387857}},
-				],
-				currentLocation: 'aa',
+				markers: [],
+				currentLocation: null,
 				selectedTrottinetteId: null,
+				estimatedTime: null,
+				estimatedPrice: null
 			}
 		},
 		methods: {
@@ -150,23 +161,28 @@ style="position:fixed;bottom:36px;left:50%;transform: translateX(-50%);width: 80
 				//valider la location
 				this.axios
 				.post("trottinette/startLocation", {
-					user: {
-						login: this.$session.get('user')
-					},
+					user:  this.$session.get('user'),
 					trottinette: {
 						id: this.selectedTrottinetteId
 					}
 				}).then(response => {
 					if (response.status == 201) {
-						console.log(response.body);
-						this.currentLocation = response.body;
+						console.log(response.data);
+						this.currentLocation = response.data;
 						this.dialogValidateTrottinette = false;
 					}
 				});
 			},
 			onClickEndLocation() {
-				//terminer la location en cours
-				this.currentLocation = null; 
+				this.axios
+				.post("trottinette/endLocation", {
+					id: this.currentLocation.id
+				}).then(response => {
+					if (response.status == 202) {
+						console.log(response.data);
+						this.currentLocation = null;
+					}
+				});
 			}
 		}
 	}
@@ -178,6 +194,6 @@ style="position:fixed;bottom:36px;left:50%;transform: translateX(-50%);width: 80
 	top: 50%;
 	transform: translateY(-50%);
 	margin: 0 20px;
-	border: 4px yellow solid;
+	border: 4px white solid;
 }
 </style>
