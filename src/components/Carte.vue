@@ -135,6 +135,13 @@ style="position:fixed;bottom:36px;left:50%;transform: translateX(-50%);width: 80
 					});
 				}
 			});
+			this.axios.post("trottinette/runningLocation", this.$session.get('user'))
+			.then(response => {
+				if (response.status == 200) {
+					this.currentLocation = response.data;
+					this.onRefreshPriceAndTimeRecursively();
+				}
+			})
 		},
 		data () {
 			return {
@@ -169,7 +176,9 @@ style="position:fixed;bottom:36px;left:50%;transform: translateX(-50%);width: 80
 					if (response.status == 201) {
 						console.log(response.data);
 						this.currentLocation = response.data;
+						console.log(this.currentLocation.dateResaString);
 						this.dialogValidateTrottinette = false;
+						this.onRefreshPriceAndTimeRecursively();
 					}
 				});
 			},
@@ -183,6 +192,22 @@ style="position:fixed;bottom:36px;left:50%;transform: translateX(-50%);width: 80
 						this.currentLocation = null;
 					}
 				});
+			},
+			onRefreshPriceAndTimeRecursively() {
+				setTimeout(() => {
+					this.estimatedTime = this.msToTime(new Date() - new Date(this.currentLocation.dateResaString));
+					var minutes = Math.floor(((new Date() - new Date(this.currentLocation.dateResaString)) / (1000 * 60)) % 60);
+					this.estimatedPrice = 1 + 0.15 * minutes;
+					this.estimatedPrice = this.estimatedPrice.toString().substring(0, 6);
+					this.estimatedPrice = this.estimatedPrice.replace('.', '€');
+					this.onRefreshPriceAndTimeRecursively();
+				}, 1000);
+			},
+			msToTime(duration) {
+				var seconds = Math.floor((duration / 1000) % 60),
+				minutes = Math.floor((duration / (1000 * 60)) % 60);
+
+				return minutes + "min" + seconds + "s";
 			}
 		}
 	}
